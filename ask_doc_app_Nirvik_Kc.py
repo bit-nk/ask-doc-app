@@ -1,7 +1,7 @@
 import streamlit as st
 from langchain_openai import OpenAI, OpenAIEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 
 # Function to generate response
