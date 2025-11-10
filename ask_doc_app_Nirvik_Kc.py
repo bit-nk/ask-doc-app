@@ -1,6 +1,6 @@
 import streamlit as st
-from langchain import OpenAI
-from langchain.embeddings import OpenAIEmbeddings
+from langchain.llms import OpenAI
+from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
@@ -13,7 +13,7 @@ def generate_response(uploaded_file, openai_api_key, query_text):
         # Read file content
         document_text = uploaded_file.read().decode("utf-8", errors="ignore")
 
-        # Split document into chunks
+        # Split into chunks
         text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
         texts = text_splitter.split_text(document_text)
 
@@ -22,19 +22,20 @@ def generate_response(uploaded_file, openai_api_key, query_text):
 
         # Create vectorstore
         db = Chroma.from_texts(texts, embeddings)
-
-        # Create retriever
         retriever = db.as_retriever()
 
-        # Create QA chain
+        # Initialize LLM
         llm = OpenAI(openai_api_key=openai_api_key, temperature=0)
+
+        # Build RetrievalQA chain
         qa = RetrievalQA.from_chain_type(llm=llm, chain_type="stuff", retriever=retriever)
 
         # Run the query
-        response = qa.run(query_text)
-        return response
+        return qa.run(query_text)
 
+# ----------------------------
 # Streamlit UI
+# ----------------------------
 st.set_page_config(page_title="Ask the Doc App", page_icon="📄")
 st.title("📄 Ask the Doc App")
 
@@ -48,7 +49,7 @@ query_text = st.text_input(
     disabled=not uploaded_file,
 )
 
-# Collect user input in a form
+# Collect input in a form
 result = []
 with st.form("qa_form", clear_on_submit=True):
     openai_api_key = st.text_input(
@@ -71,7 +72,7 @@ with st.form("qa_form", clear_on_submit=True):
                 except Exception as e:
                     st.error(f"An error occurred: {e}")
 
-# Display response
+# Display output
 if len(result):
     st.success("✅ Response:")
     st.info(result[-1])
